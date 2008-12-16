@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteBase "/~NanoTech/webcore/"
+	RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
+	RewriteCond %{REQUEST_URI} !(theme|js|images|fonts)
+	RewriteRule ^(.*)$ index.php?url=$1 [QSA]
+</IfModule>
