@@ -64,7 +64,7 @@ class PhammablePlugin {
 
 	public function PhammablePlugin() {
 		$this->template_extension = '.haml';
-		$this->template_dir = 'app/views';
+		$this->template_dir = 'views';
 		$this->cache_dir = 'cache';
 		$this->indent = "\t";
 		$this->caching = 1;
@@ -120,11 +120,24 @@ class PhammablePlugin {
 	 */
 	public function parse($file) {
 		$file = $this->template_dir.'/'.$file;
-		$file = realpath($file);
-
+		#$file = realpath($file);
 		$encoding = 'utf-8';
 
-		if (!file_exists($file)) throw new Exception("File '$file' does not exist!");
+		$paths = explode(':', ini_get('include_path'));
+		$file_found = false;
+
+		foreach($paths as $path) {
+			$new_file = $path.'/'.$file;
+
+			if(file_exists($new_file)) {
+				$file_found = true;
+				$file = $new_file;
+				break;
+			}
+		}
+
+		if (!$file_found) throw new Exception("File '$file' does not exist!");
+
 		$php_file = str_replace('//', '/', $this->cache_dir.'/'.basename($file)).'.php';
 		$static_file = rtrim($php_file, '.php').'.htm';
 
