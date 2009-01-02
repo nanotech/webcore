@@ -75,7 +75,7 @@ class PhammablePlugin {
 		echo $this->parse($file);
 	}
 
-	public function assign($key, $value)
+	public function assign($key, $value=false)
 	{
 		if(is_array($key)) {
 			$values = $key;
@@ -119,7 +119,7 @@ class PhammablePlugin {
 	 * Otherwise, parse the HAML file and output equivalent PHP code to the target location, then return its filename.
 	 */
 	public function parse($file) {
-		$file = $this->template_dir.'/'.$file;
+		$file = $this->template_dir.'/'.$file.$this->template_extension;
 		#$file = realpath($file);
 		$encoding = 'utf-8';
 
