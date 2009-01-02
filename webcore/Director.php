@@ -67,7 +67,7 @@ class Director
 
 		require_once('controllers/'.$action[0].'.php');
 		$controller_name = $action[0].'Controller';
-		$controller = new $controller_name();
+		$controller = new $controller_name($result);
 
 		$controller->$action[1]($result);
 

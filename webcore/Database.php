@@ -151,7 +151,7 @@ class Database
 
 		else return false;
 		
-		return (string) $safe;
+		return $safe;
 	}
 }
 ?>
