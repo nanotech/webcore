@@ -8,6 +8,7 @@
 require_once('Smarty/Smarty.class.php');
 
 class SmartyPlugin extends Smarty { 
+	public $template_dir;
 	public $template_extension;
 
 	public function SmartyPlugin()
@@ -22,9 +23,15 @@ class SmartyPlugin extends Smarty {
 		$this->assign('BASE_URL', BASE_URL);
 	}
 
-	public function render($file)
+	public function render($file, $display=true)
 	{
-		$this->display($file);
+		$file = $file.$this->template_extension;
+
+		if ($display) {
+			return $this->display($file);
+		} else {
+			return $this->fetch($file);
+		}
 	}
 }
 ?>
