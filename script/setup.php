@@ -19,6 +19,7 @@ if(!file_exists($base_path.'/app')) {
     mkdir($app.'/config');
     mkdir($app.'/controllers');
     mkdir($app.'/views');
+    mkdir($app.'/plugins');
     copy($defaults.'/config/init.php', $app.'/config/init.php');
     copy($defaults.'/config/constants.php', $app.'/config/constants.php');
     copy($defaults.'/index.php', $base_path.'/index.php');

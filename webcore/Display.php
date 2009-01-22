@@ -10,7 +10,7 @@ class Display
 	{
 		// Plug in template system
 		Core::import($engine);
-		$this->engine_name = rtrim($engine, '.plugin');
+		$this->engine_name = str_replace('.plugin', '', $engine);
 		$plugin_name = $this->engine_name.'Plugin';
 		$this->engine = new $plugin_name;
         $this->engine->assign('BASE_URL', BASE_URL);

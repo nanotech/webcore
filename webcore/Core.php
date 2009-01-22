@@ -7,10 +7,10 @@ class Core
 
 		foreach((array) $classes as $class) {
 			if (strrpos($class, '.plugin') !== false) {
-				$folder = 'plugins/';
+				$folder = 'app/plugins/';
 
 				if (!is_file($folder.$class.'.php')) {
-					$folder = 'app/plugins/';
+					$folder = 'webcore/default/plugins/';
 				}
 
 			} else if (strrpos($class, '.controller') !== false) {
