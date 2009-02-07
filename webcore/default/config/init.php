@@ -1,6 +1,5 @@
 <?php
 require_once('webcore/init.php');
-set_include_path('.:app:webcore/default:');
 
 $Display = new Display('Phammable.plugin');
 
