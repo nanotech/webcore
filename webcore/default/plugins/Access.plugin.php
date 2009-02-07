@@ -113,7 +113,10 @@ class AccessPlugin {
 			$this->loadUser($_SESSION[$this->sessionVariable]);
 
 		// Is there a cookie?
-		if (isset($_COOKIE[$this->remCookieName]) && !isset($_SESSION['userdata']))
+		if ( (isset($_COOKIE[$this->remCookieName]) ||
+		      isset($_POST['session_id']))
+			 && !isset($_SESSION['userdata'])
+		   )
 		{
 			// Read the cookie
 			$cookie = $this->readCookie();
@@ -204,9 +207,14 @@ class AccessPlugin {
 
 	function readCookie()
 	{
-		if(isset($_COOKIE[$this->remCookieName]))
+		if(isset($_COOKIE[$this->remCookieName]) || isset($_POST['session_id']))
 		{
-			$cookie = $_COOKIE[$this->remCookieName];
+			if (isset($_COOKIE[$this->remCookieName])) {
+				$cookie = $_COOKIE[$this->remCookieName];
+			} else {
+				$cookie = $_POST['session_id'];
+			}
+
 			$cookie = str_split($cookie, 40);
 
 			$cookie = array(
@@ -243,7 +251,9 @@ class AccessPlugin {
 		$Database->delete($oldcookie, 'authcookies');
 
 		$cookie = $cookie['token'].$cookie['series'].$cookie['userid'];
-		$a = setcookie($this->remCookieName, $cookie, 
+		$_SESSION['authcookie'] = $cookie;
+
+		setcookie($this->remCookieName, $cookie,
 			time()+$this->remTime, '/', $this->remCookieDomain, false, true);
 
 		return true;
@@ -309,8 +319,8 @@ class AccessPlugin {
 
 		$data[$this->tbFields['pass']] = sha1($this->salt.$data[$this->tbFields['pass']]); 
 
-		foreach ($data as $k => $v ) $data[$k] = "'".$Database->escape($v)."'";
-		$Database->query("INSERT INTO `{$this->dbTable}` (`".implode('`, `', array_keys($data))."`) VALUES (".implode(", ", $data).")");
+		foreach ($data as $k => $v ) $data[$k] = $Database->escape($v);
+		$result = $Database->insert($data, $this->dbTable);
 		return (int) mysql_insert_id($Database->link);
 	}
 
