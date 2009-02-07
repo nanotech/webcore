@@ -8,7 +8,7 @@ class Director
 	{
 		$this->patterns = array();
 		$this->error_handlers = array(
-			404 => 'Default.error'
+			'default' => 'Default.error'
 		);
 
 		require_once('config/router.php');
@@ -44,7 +44,13 @@ class Director
 			{
 				if(preg_match($pattern, $url, $result))
 				{
-					return $this->execute($action, $result);
+					$success = $this->execute($url, $action, $result);
+
+					if ($success == false) {
+						throw new HttpError(404);
+					} else {
+						return $success;
+					}
 				}
 			}
 
@@ -55,21 +61,58 @@ class Director
 		// Catch exceptions and display the page for that error.
 		} catch (HttpError $e) {
 			$error_code = $e->getMessage();
-			$handler = $this->error_handlers[$error_code];
+			$handlers = &$this->error_handlers;
 
-			return $this->execute($handler);
+			if (isset($handlers[$error_code])) {
+				$handler = $handlers[$error_code];
+			} else {
+				$handler = $handlers['default'];
+			}
+
+			return $this->execute($url, $handler, $error_code, false);
 		}
 	}
 
-	protected function execute($action, $result = false)
+	protected function execute($url, $action, $result = true, $cache = CACHE)
 	{
 		$action = explode('.', $action);
 
-		require_once('controllers/'.$action[0].'.php');
-		$controller_name = $action[0].'Controller';
-		$controller = new $controller_name($result);
+		try {
+			if ($cache) {
+				$cache_file = APP_DIR.'/../cache/'.sha1($url);
+				$cache_expiry = 60 * 60 * 60;
+				$buffering = false;
+			}
 
-		$controller->$action[1]($result);
+			if ($cache && file_exists($cache_file) &&
+				(time() - filemtime($cache_file)) < $cache_expiry) {
+
+				readfile($cache_file);
+
+			} else {
+				if ($cache) {
+					ob_start(); $buffering = true;
+				}
+
+				Core::import($action[0].'.controller');
+				$controller_name = $action[0].'Controller';
+				$controller = new $controller_name($result);
+
+				$controller->$action[1]($result);
+
+				if ($cache) {
+					file_put_contents($cache_file, ob_get_flush());
+					$buffering = false;
+				}
+			}
+		} catch (MissingClass $e) {
+			if ($cache && $buffering) {
+				ob_end_flush();
+				$buffering = false;
+			}
+
+			return false;
+		}
 
 		return $result;
 	}
