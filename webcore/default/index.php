@@ -1,1 +1,4 @@
-<?php require_once 'app/config/init.php'; ?>
+<?php
+define('APP_DIR', realpath('app'));
+require 'webcore/run.php';
+?>
