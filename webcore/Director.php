@@ -42,14 +42,12 @@ class Director
 			// value is the action.
 			foreach($this->patterns as $pattern => $action)
 			{
-				if(preg_match($pattern, $url, $result))
+				if(preg_match($pattern, $url, $parameters))
 				{
-					$success = $this->execute($url, $action, $result);
-
-					if ($success == false) {
-						throw new HttpError(404);
+					if ($this->execute($url, $action, $parameters)) {
+						return true;
 					} else {
-						return $success;
+						throw new HttpError(404);
 					}
 				}
 			}
@@ -69,11 +67,13 @@ class Director
 				$handler = $handlers['default'];
 			}
 
-			return $this->execute($url, $handler, $error_code, false);
+			$this->execute($url, $handler, $error_code, false);
+
+			return false;
 		}
 	}
 
-	protected function execute($url, $action, $result = true, $cache = CACHE)
+	protected function execute($url, $action, $parameters=NULL, $cache=CACHE)
 	{
 		$action = explode('.', $action);
 
@@ -94,11 +94,10 @@ class Director
 					ob_start(); $buffering = true;
 				}
 
-				Core::import($action[0].'.controller');
 				$controller_name = $action[0].'Controller';
-				$controller = new $controller_name($result);
+				$controller = new $controller_name($parameters);
 
-				$controller->$action[1]($result);
+				call_user_func_array(array(&$controller, $action[1]), $parameters);
 
 				if ($cache) {
 					file_put_contents($cache_file, ob_get_flush());
@@ -114,7 +113,7 @@ class Director
 			return false;
 		}
 
-		return $result;
+		return true;
 	}
 }
 
