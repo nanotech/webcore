@@ -1,67 +1,104 @@
 <?php
+/**
+ * Display manages a list of Filters, a Stack of data,
+ * a meta array, and renders files.
+ */
 class Display
 {
-	public $engine;
-	public $engine_name;
-	protected $Layout;
-	protected $layout_name;
+	public $filters;
+	public $stack;
+	public $meta;
 
-	public function Display($engine)
+	public function __construct($filters=array())
 	{
-		// Plug in template system
-		Core::import($engine);
-		$this->engine_name = str_replace('.plugin', '', $engine);
-		$plugin_name = $this->engine_name.'Plugin';
-		$this->engine = new $plugin_name;
-        $this->engine->assign('BASE_URL', BASE_URL);
+		$this->filters = $filters;
+		$this->stack = new Stack;
 	}
 
-	public function page($page)
+	/**
+	 * Apply the Display's filters to a file.
+	 */
+	public function render($file)
 	{
-		# If there's a layout set...
-		if (!empty($this->layout_name)) {
+		# Find the actual file.
+		$type = $this->filter_type(reset($this->filters));
+		$file = Core::find_resource($file, 'app/views', $type->in);
 
-			# Render the page, and save it as $content.
-			$content = $this->engine->render($page, false);
+		# Load the inital data.
+		$this->stack->push(file_get_contents($file));
 
-			# Copy the layout name variable so we can use it
-			# after we unset it below.
-			$layout_name = $this->layout_name;
+		foreach($this->filters as $filter_name) {
 
-			# Set to null so we don't go into an infinite loop.
-			$this->layout_name = null;
+			# Filters with arguments are arrays.
+			if (is_array($filter_name)) {
+				$filter_args = $filter_name;
+				$filter_name = array_shift($filter_args);
+			} else {
+				$filter_args = array();
+			}
 
-			# Call the layout's function, passing the original
-			# page content.
-			$this->Layout->$layout_name($content);
+			# Initialize filter.
+			$filter = new $filter_name($this->meta);
 
-		} else {
-			# If a layout isn't set, just render the page.
-			$this->engine->render($page);
+			# Get the new $in.
+			$new_type = $this->filter_type($filter);
+
+			# Type check
+			if ($type->check($new_type)) {
+				throw new FilterTypeError($type, $new_type);
+			}
+
+			# The new type is now old.
+			$type = $new_type;
+
+			# Pop a data item off the stack.
+			$data = $this->stack->pop();
+
+			# Add the data to the filter arguments.
+			array_unshift($filter_args, $data);
+
+			# Run the filter...
+			$parsed_data = call_user_func_array(array($filter, 'parse'), $filter_args);
+
+			# ...and put the result back on the stack.
+			$this->stack->push($parsed_data);
+
+			# Load the metadata from the Filter.
+			$this->meta = $filter->meta;
 		}
+
+		return $this->stack->last();
 	}
 
-	public function assign($key, $value=false)
+	/**
+	 * Get a filter's type
+	 */
+	public function filter_type($filter, $which=false)
 	{
-		if($value)
-			$this->engine->assign($key, $value);
-		else
-			$this->engine->assign($key);
+		$reflection = new ReflectionClass($filter);
+		$type_string = $reflection->getProperty('type')->getValue();
+		return FilterType::parse($type_string);
+	}
+}
+
+/**
+ * Filter type checking error.
+ */
+class FilterTypeError extends Exception {
+	protected $a;
+	protected $b;
+
+	public function __construct($a, $b)
+	{
+		$this->a = $a;
+		$this->b = $b;
+
+		parent::__construct();
 	}
 
-	public function setLayout($layout)
+	public function __toString()
 	{
-		$template_dir = $this->engine->template_dir;
-		$template_extension = $this->engine->template_extension;
-		$layout_file = $template_dir.'/layouts/'.$layout.$template_extension;
-
-		if (is_file($layout_file)) {
-			$this->layout_name = $layout;
-			Core::import('Layout.controller');
-			$this->Layout = new LayoutController();
-		} else {
-			throw new Exception("Layout '$layout' does not exist.");
-		}
+		return __CLASS__.': "'.$this->a->out.'" does not match "'.$this->b->in.'"';
 	}
 }
 ?>

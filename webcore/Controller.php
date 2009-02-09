@@ -6,29 +6,19 @@ class Controller
 
 	public function Controller($url=false)
 	{
+		global $Display;
+
 		$this->Display = &$Display;
 		$this->url = $url;
 	}
 
 	protected function render($view)
 	{
-		global $Display;
-
-		if ($this->url) $this->assign('THIS', $this->url[0]);
-		$Display->page($view);
+		if ($this->url) $this->Display->meta['THIS'] = $this->url[0];
+		echo $this->Display->render($view);
 	}
 
-	public function assign($key, $value=false)
-	{
-		global $Display;
-
-		if($value) 
-			$Display->assign($key, $value);
-		else 
-			$Display->assign($key);
-	}
-
-	public function location($url)
+	public function redirect_to($url)
 	{
 		header('Location: '.BASE_URL.'/'.$url);
 	}
