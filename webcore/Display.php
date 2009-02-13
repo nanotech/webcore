@@ -24,6 +24,8 @@ class Display
 		$type = $this->filter_type(reset($this->filters));
 		$file = Core::find_resource($file, 'app/views', $type->in);
 
+		$type->out = $type->in;
+
 		# Load the inital data.
 		$this->stack->push(file_get_contents($file));
 
