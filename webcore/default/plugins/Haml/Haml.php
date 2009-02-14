@@ -69,7 +69,6 @@ class HamlPlugin extends Filter {
 
 		$this->xml->setIndentString($indent_parser->indent['string']); 
 
-		header('Content-type: text/plain'); # DEUBG
 		$html_tree = $this->parse_haml($tree);
 		$this->render_xml($html_tree);
 
