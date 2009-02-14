@@ -22,7 +22,10 @@ class Display
 	{
 		# Find the actual file.
 		$type = $this->filter_type(reset($this->filters));
-		$file = Core::find_resource($file, 'app/views', $type->in);
+		$file = Core::find_resource(
+			$file, array('app/views', WEBCORE_DIR.'/default/views'),
+			$type->in # extension
+		);
 
 		$type->out = $type->in;
 

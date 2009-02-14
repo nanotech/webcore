@@ -67,7 +67,9 @@ class Director
 				$handler = $handlers['default'];
 			}
 
-			$this->execute($url, $handler, $error_code, false);
+			if (!$this->execute($url, $handler, $error_code, false)) {
+				die('Missing error handler "'.$handler.'"!');
+			}
 
 			return false;
 		}
@@ -75,7 +77,7 @@ class Director
 
 	protected function execute($url, $action, $parameters=NULL, $cache=CACHE)
 	{
-		$action = explode('.', $action);
+		list($class, $method) = explode('.', $action);
 
 		try {
 			if ($cache) {
@@ -94,17 +96,18 @@ class Director
 					ob_start(); $buffering = true;
 				}
 
-				$controller_name = $action[0].'Controller';
+				Core::import($class.'.controller');
+				$controller_name = $class.'Controller';
 				$controller = new $controller_name($parameters);
 
-				call_user_func_array(array(&$controller, $action[1]), $parameters);
+				call_user_func_array(array(&$controller, $method), $parameters);
 
 				if ($cache) {
 					file_put_contents($cache_file, ob_get_flush());
 					$buffering = false;
 				}
 			}
-		} catch (MissingClass $e) {
+		} catch (MissingFile $e) {
 			if ($cache && $buffering) {
 				ob_end_flush();
 				$buffering = false;

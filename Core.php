@@ -23,11 +23,11 @@ class Core
 		if ($type_pos === false) {
 
 			# PluginType
-			$split = preg_split('/([a-z])([A-Z])/', $class, 2, PREG_SPLIT_DELIM_CAPTURE);
+			$split = preg_split('/([A-Z][^A-Z]+)/', $class, 2, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
 
-			if (count($split) == 4) {
-				$name = $split[0].$split[1];
-				$type = strtolower($split[2].$split[3]);
+			if (count($split) >= 2) {
+				$type = strtolower(array_pop($split));
+				$name = implode('', $split);
 			} else { $type = NULL; } # Unknown plugin
 
 		} else {
@@ -102,12 +102,12 @@ class Core
 }
 
 class MissingFile extends Exception {
-	protected $file;
+	protected $missing_file;
 	protected $searched_paths;
 
 	function __construct($file, $searched_paths)
 	{
-		$this->file = $file;
+		$this->missing_file = $file;
 		$this->searched_paths = (array) $searched_paths;
 
 		parent::__construct();
@@ -117,7 +117,7 @@ class MissingFile extends Exception {
 	{
 		$searched_paths = implode("\n", $this->searched_paths);
 
-		return "MissingFile: Searched in $searched_paths for \"$this->file\"";
+		return "MissingFile: Searched in $searched_paths for \"$this->missing_file\"";
 	}
 }
 class MissingClass extends MissingFile {}
