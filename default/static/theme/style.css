@@ -1,0 +1,39 @@
+body {
+	text-align:center;
+	font-size:1.2em;
+	font-family:"Optima", Helvetica, sans-serif;
+}
+
+h1 {
+	font-size:2.8em;
+	font-variant:small-caps;
+	margin:.4em 0 0;
+	font-weight:normal;
+	text-shadow:0 1px #aaa;
+	font-family:"Gill Sans", "Optima", Helvetica, sans-serif;
+}
+
+h1 span {
+	font-family:Optima, Helvetica, sans-serif;
+	font-size:.85em;
+	text-transform:lowercase;
+}
+
+#content {
+	width:510px;
+	text-align:left;
+	margin:5em auto 0;
+	padding:3em 0;
+}
+
+p {
+	text-align:right;
+}
+
+code {
+	font-family:Monaco, "Lucida Console", monospace;
+	border:1px solid #999;
+	padding:1px 4px;
+	background:#111;
+	color:#efefef;
+}

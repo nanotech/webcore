@@ -3,6 +3,7 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
 		<title>Welcome to WebCore</title>
+		<link rel="stylesheet" type="text/css" href="<?php echo BASE_URL;?>/static/theme/style.css" />
 	</head>
 	<body>
 		<div id="content">
