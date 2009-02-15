@@ -96,7 +96,7 @@ class Director
 					ob_start(); $buffering = true;
 				}
 
-				Core::import($class.'.controller');
+				Core::import($class);
 				$controller_name = $class.'Controller';
 				$controller = new $controller_name($parameters);
 
@@ -107,7 +107,7 @@ class Director
 					$buffering = false;
 				}
 			}
-		} catch (MissingFile $e) {
+		} catch (MissingResource $e) {
 			if ($cache && $buffering) {
 				ob_end_flush();
 				$buffering = false;
