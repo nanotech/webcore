@@ -25,5 +25,5 @@ Core::index_resources(array(
 require 'config/setup.php';
 
 $Director = new Director();
-$Director->parse($_GET['url']);
+$Director->parse();
 ?>

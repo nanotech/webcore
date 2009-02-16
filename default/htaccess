@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase "/"
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
-    RewriteRule ^(.*)$ index.php?url=$1 [QSA]
+    RewriteBase /
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php/$1 [QSA]
 </IfModule>

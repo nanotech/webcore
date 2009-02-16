@@ -27,11 +27,11 @@ class Director
 	 * Read the given url and apply the actions in
 	 * the $patterns array to it.
 	 */
-	public function parse($url)
+	public function parse($url=false)
 	{
-		try {
-			$url = trim($url, '/');
+		if ($url == false) $url = Director::get_uri();
 
+		try {
 			if(!empty($url) && file_exists('static/'.$url)) {
 				readfile('static/'.$url);
 				return true;
@@ -117,6 +117,31 @@ class Director
 		}
 
 		return true;
+	}
+
+	public static function get_uri()
+	{
+		if (is_array($_GET) && count($_GET) == 1 &&
+			($uri = trim(key($_GET), '/')) != '') {
+
+			return $uri;
+		}
+
+		$maybe_uris = @array(
+			$_SERVER['PATH_INFO'],
+			$_SERVER['QUERY_STRING'],
+			$_SERVER['ORIG_PATH_INFO']
+		);
+
+		foreach($maybe_uris as $uri) {
+			$uri = trim($uri, '/');
+
+			if (!empty($uri)) {
+				return $uri;
+			}
+		}
+
+		return '';
 	}
 }
 
