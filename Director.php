@@ -32,11 +32,6 @@ class Director
 		if ($url == false) $url = Director::get_uri();
 
 		try {
-			if(!empty($url) && file_exists('static/'.$url)) {
-				readfile('static/'.$url);
-				return true;
-			}
-
 			// Loop through the patterns.
 			// The array key is the pattern, and the 
 			// value is the action.
@@ -58,6 +53,11 @@ class Director
 
 		// Catch exceptions and display the page for that error.
 		} catch (HttpError $e) {
+			if(!empty($url) && is_file('static/'.$url)) {
+				readfile('static/'.$url);
+				return true;
+			}
+
 			$error_code = $e->getMessage();
 			$handlers = &$this->error_handlers;
 
@@ -81,7 +81,7 @@ class Director
 
 		try {
 			if ($cache) {
-				$cache_file = APP_DIR.'/../cache/'.sha1($url);
+				$cache_file = CACHE_DIR.'/'.sha1($url);
 				$cache_expiry = 60 * 60 * 60;
 				$buffering = false;
 			}
@@ -100,6 +100,7 @@ class Director
 				$controller_name = $class.'Controller';
 				$controller = new $controller_name($parameters);
 
+				unset($parameters[0]); # Don't pass the complete match
 				call_user_func_array(array(&$controller, $method), $parameters);
 
 				if ($cache) {
@@ -121,12 +122,6 @@ class Director
 
 	public static function get_uri()
 	{
-		if (is_array($_GET) && count($_GET) == 1 &&
-			($uri = trim(key($_GET), '/')) != '') {
-
-			return $uri;
-		}
-
 		$maybe_uris = @array(
 			$_SERVER['PATH_INFO'],
 			$_SERVER['QUERY_STRING'],
@@ -139,6 +134,12 @@ class Director
 			if (!empty($uri)) {
 				return $uri;
 			}
+		}
+
+		if (is_array($_GET) && count($_GET) == 1 &&
+			($uri = trim(key($_GET), '/')) != '') {
+
+			return $uri;
 		}
 
 		return '';
