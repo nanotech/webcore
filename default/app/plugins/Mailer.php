@@ -1,5 +1,8 @@
 <?php
-class MailPlugin {
+/**
+ * Wrapper for PEAR::Mail
+ */
+class Mailer {
 
 	private $host;
 	private $port;
@@ -8,7 +11,7 @@ class MailPlugin {
 
 	public $from;
 
-	public function MailPlugin($host, $port, $username, $password) {
+	public function __construct($host, $port, $username, $password) {
 		$this->host = $host;
 		$this->port = $port;
 		$this->username = $username;

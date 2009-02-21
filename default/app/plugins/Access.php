@@ -28,7 +28,7 @@
  * @param string $dbTable
  */
 
-class AccessPlugin {
+class Access {
 
 	/**
 	 * The database table that holds all the information
@@ -64,7 +64,7 @@ class AccessPlugin {
 	 * The name of the cookie which we will use if user wants to be remembered by the system
 	 * var string
 	 */
-	var $remCookieName = AUTH_COOKIE_NAME;
+	var $remCookieName;
 
 	/**
 	 * The cookie domain
@@ -87,8 +87,8 @@ class AccessPlugin {
 	/**
 	 * Salt for hashing
 	 */
-	private $salt = SALT1;
-	private $cookiesalt = SALT2;
+	private $salt;
+	private $cookiesalt;
 
 	var $userID;
 	var $dbConn;
@@ -99,9 +99,17 @@ class AccessPlugin {
 	 * 
 	 * @return void
 	 */
-	function AccessPlugin()
+	function __construct($salt, $cookie_name, $cookie_salt)
 	{
 		global $Database;
+
+		$this->remCookieDomain = $cookie_name;
+		$this->salt = $salt;
+		$this->cookiesalt = $cookie_salt;
+
+		if (session_id() == '') {
+			session_start();
+		}
 
 		// Set the cookie domain. This should be set to a fixed value when used in
 		// a production enviornment.
