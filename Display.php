@@ -7,7 +7,7 @@ class Display
 {
 	public $filters;
 	public $stack;
-	public $meta;
+	public $meta = array();
 
 	public function __construct($filters=array())
 	{

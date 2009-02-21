@@ -1,8 +1,12 @@
 <?php
+/**
+ * Directs urls to their assigned controllers
+ */
 class Director
 {
-	public $patterns;
-	public $error_handlers;
+	public $patterns; # usually loaded from app/config/router.php
+	public $parsed_patterns; # in-memory cache
+	public $error_handlers; # actions to use in case of errors
 
 	public function Director()
 	{
@@ -35,11 +39,17 @@ class Director
 			// Loop through the patterns.
 			// The array key is the pattern, and the 
 			// value is the action.
-			foreach($this->patterns as $pattern => $action)
+			foreach ($this->patterns as $pattern => $action)
 			{
-				if(preg_match($pattern, $url, $parameters))
+				$parsed_pattern = self::parse_pattern($pattern, $action);
+				$this->parsed_patterns[$action] = $parsed_pattern;
+				list($regex, $structure) = $parsed_pattern;
+
+				if (preg_match($regex, $url, $parameters))
 				{
-					if ($this->execute($url, $action, $parameters)) {
+					$action = self::parse_action($action, $parameters);
+
+					if ($controller = $this->execute($url, $action, $parameters)) {
 						return true;
 					} else {
 						throw new HttpError(404);
@@ -67,7 +77,7 @@ class Director
 				$handler = $handlers['default'];
 			}
 
-			if (!$this->execute($url, $handler, $error_code, false)) {
+			if (!$this->execute($url, $handler, array('code' => $error_code), false)) {
 				die('Missing error handler "'.$handler.'"!');
 			}
 
@@ -90,6 +100,7 @@ class Director
 				(time() - filemtime($cache_file)) < $cache_expiry) {
 
 				readfile($cache_file);
+				return true;
 
 			} else {
 				if ($cache) {
@@ -100,13 +111,16 @@ class Director
 				$controller_name = $class.'Controller';
 				$controller = new $controller_name($parameters);
 
-				unset($parameters[0]); # Don't pass the complete match
+				if (isset($parameters[0]))
+					unset($parameters[0]); # Don't pass the complete match
 				call_user_func_array(array(&$controller, $method), $parameters);
 
 				if ($cache) {
 					file_put_contents($cache_file, ob_get_flush());
 					$buffering = false;
 				}
+
+				return $controller;
 			}
 		} catch (MissingResource $e) {
 			if ($cache && $buffering) {
@@ -116,10 +130,11 @@ class Director
 
 			return false;
 		}
-
-		return true;
 	}
 
+	/**
+	 * Get the current uri.
+	 */
 	public static function get_uri()
 	{
 		$maybe_uris = @array(
@@ -143,6 +158,80 @@ class Director
 		}
 
 		return '';
+	}
+
+	/**
+	 * Parse a custom-syntax pattern into a regex and an array.
+	 */
+	public static function parse_pattern($pattern)
+	{
+		# Find regex patterns
+		preg_match_all('/\((.*?)(?:\:([^)]+))?\)/u', $pattern, $matches);
+
+		# Convert patterns to valid regex and set named captures
+		$c = count($matches[0]);
+		$regex = $sections = $pattern; # copy $pattern for manipulation
+
+		for ($i=0;$i<$c;++$i) {
+			$name = $matches[2][$i];
+			$old_pattern = $matches[0][$i];
+
+			$subpattern = '(?P<'.$name.'>'.$matches[1][$i].')';
+			$regex = str_replace($old_pattern, $subpattern, $regex);
+			$sections = str_replace($old_pattern, '('.$name.')', $sections);
+		}
+
+		# Add dilemters, flags.
+		$regex = '!^'.$regex.'$!ui';
+
+		return array($regex, $sections);
+	}
+
+	/**
+	 * Parse a Controller.method action, replacing variables.
+	 */
+	public static function parse_action($action, $values)
+	{
+		# Parse the variables in the action
+		$action = self::replace_variables($action, $values);
+
+		# Ensure the first letter of the controller is uppercase
+		$action = ucfirst($action);
+
+		return $action;
+	}
+
+	/**
+	 * Find and replace named variables in a string with the format `(var)`.
+	 */
+	public static function replace_variables($string, $values)
+	{
+		# Find any variables
+		preg_match_all('/\(([^)]+)\)/u', $string, $matches);
+
+		# Replace variables with their values
+		foreach ($matches[1] as $id => $var) {
+			if (isset($values[$var])) {
+				$string = str_replace($matches[0][$id], $values[$var], $string);
+			}
+		}
+
+		return $string;
+	}
+
+	/**
+	 * Get the pattern of an action.
+	 */
+	public function get_pattern($action)
+	{
+		$pattern = &$this->parsed_patterns[$action];
+		if (isset($pattern)) {
+			return $pattern;
+		} else {
+			$patterns = array_flip($this->patterns);
+			$pattern = self::parse_pattern($patterns[$action]);
+			return $pattern;
+		}
 	}
 }
 

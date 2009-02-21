@@ -14,7 +14,6 @@ class Controller
 
 	protected function render($view)
 	{
-		if ($this->url) $this->display->meta['THIS'] = $this->url[0];
 		echo $this->display->render($view);
 	}
 
