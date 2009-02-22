@@ -24,6 +24,6 @@ Core::index_resources(array(
 
 require 'config/setup.php';
 
-$Director = new Director();
+$Director = new Director('config/router.php');
 $Director->parse();
 ?>

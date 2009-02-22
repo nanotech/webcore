@@ -8,14 +8,16 @@ class Director
 	public $parsed_patterns; # in-memory cache
 	public $error_handlers; # actions to use in case of errors
 
-	public function Director()
+	public function Director($config=false)
 	{
 		$this->patterns = array();
 		$this->error_handlers = array(
 			'default' => 'Default.error'
 		);
 
-		require_once('config/router.php');
+		if ($config) {
+			require_once $config;
+		}
 	}
 
 	/**

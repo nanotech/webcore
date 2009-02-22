@@ -74,6 +74,11 @@ class Core
 		$d->close();
 		return $files;
 	}
+
+	static public function reset()
+	{
+		self::$resources = array();
+	}
 }
 
 class MissingResource extends Exception {}
