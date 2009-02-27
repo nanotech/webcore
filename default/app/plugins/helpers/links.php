@@ -3,15 +3,28 @@ if (!function_exists('link_to'))
 {
 	function link_to($action, $values=array())
 	{
-		global $Director;
+		return Controller::link_to($action, $values);
+	}
+}
 
-		$pattern = $Director->get_pattern($action);
-		$pattern = $pattern[1]; # get structure
-		if (count($values) != 0)
-			$uri = Director::replace_variables($pattern, $values);
-		$uri = BASE_URL.'/'.$uri;
+if (!function_exists('link_list'))
+{
+	/**
+	 * Loops through an array of links in "Name" => "Controller.method" 
+	 * format, and either returns or echos it.
+	 */
+	function link_list($links, $before='<li>', $after="</li>\n", $return=false)
+	{
+		$string = '';
+		foreach ($links as $name => $link) {
+			$string .= $before.'<a href="'.link_to($link).'">'.$name.'</a>'.$after;
+		}
 
-		return $uri;
+		if ($return) {
+			return $string;
+		} else {
+			echo $string;
+		}
 	}
 }
 ?>

@@ -17,9 +17,33 @@ class Controller
 		echo $this->display->render($view);
 	}
 
-	public function redirect_to($url)
+	public function redirect_to($action, $values=array())
 	{
-		header('Location: '.BASE_URL.'/'.$url);
+		if (strpos($action, '/') !== false) {
+			$uri = $action;
+		} else {
+			$uri = self::link_to($action, $values);
+		}
+
+		header('Location: '.$uri);
+	}
+
+	public static function link_to($action, $values=array())
+	{
+		global $Director;
+
+		$pattern = $Director->get_pattern($action);
+		$pattern = $pattern[1]; # get structure
+
+		if (count($values) != 0) {
+			$uri = Director::replace_variables($pattern, $values);
+		} else {
+			$uri = $pattern;
+		}
+
+		$uri = BASE_URL.'/'.$uri;
+
+		return $uri;
 	}
 
 	public function export($name, $value=NULL)
