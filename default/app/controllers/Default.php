@@ -42,6 +42,7 @@ class DefaultController extends Controller {
 	 * This method handles errors, such as 404s.
 	 */
 	public function error() {
+		header('HTTP/1.0 404 Not Found');
 		$this->render('error');
 	}
 }
