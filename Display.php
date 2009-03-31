@@ -11,7 +11,7 @@ class Display
 
 	public function __construct($filters=array())
 	{
-		$this->filters = $filters;
+		$this->filters = (array) $filters;
 		$this->stack = new Stack;
 	}
 
