@@ -4,7 +4,6 @@
  * You could compare them to template engines in other web frameworks.
  */
 abstract class Filter {
-	static public $type;
 	public $meta;
 
 	public function __construct($meta) {
