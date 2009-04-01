@@ -22,11 +22,19 @@ class Core
 
 	static public function index_resources($types)
 	{
-		$resource_cache = CACHE_DIR.'/resource_cache.php';
+		global $Config;
 
-		if (file_exists($resource_cache)) {
-			self::$resources = require $resource_cache;
-			return;
+		if (isset($Config)) {
+			$resource_cache = $Config->cache['directory'].'/resource_cache.php';
+
+			if (file_exists($resource_cache)) {
+				self::$resources = require $resource_cache;
+				return;
+			}
+
+			$cache_resources = true;
+		} else {
+			$cache_resources = false;
 		}
 
 		foreach ($types as $type => $dirs) {
@@ -42,8 +50,10 @@ class Core
 			}
 		}
 
-		$exported = '<?php return '.var_export(self::$resources, true).';?>';
-		file_put_contents($resource_cache, $exported);
+		if ($cache_resources) {
+			$exported = '<?php return '.var_export(self::$resources, true).';?>';
+			file_put_contents($resource_cache, $exported);
+		}
 	}
 
 	static private function resources_in($dir, $prefix=false)

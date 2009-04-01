@@ -5,7 +5,16 @@ if (!defined('APP_DIR') || APP_DIR === false) die('Please define APP_DIR.');
 set_include_path(get_include_path().'.:'.APP_DIR.':'.WEBCORE_DIR.'/default:');
 
 require WEBCORE_DIR.'/Core.php';
-require 'config/constants.php';
+require WEBCORE_DIR.'/Config.php';
+
+if (file_exists(APP_DIR.'/config/config.php')) {
+	$Config = new Config(require 'config/config.php');
+
+	define('DEBUG', $Config->debug);
+	define('BASE_URL', $Config->base_url);
+} else {
+	require 'config/constants.php';
+}
 
 Core::index_resources(array(
 	'php' => array(

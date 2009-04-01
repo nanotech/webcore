@@ -87,14 +87,24 @@ class Director
 		}
 	}
 
-	protected function execute($url, $action, $parameters=NULL, $cache=CACHE)
+	protected function execute($url, $action, $parameters=NULL, $cache=NULL)
 	{
+		global $Config;
 		list($class, $method) = explode('.', $action);
+
+		if ($cache === NULL) {
+			if (isset($Config)) {
+				$cache = ($Config->cache['level'] == 'url');
+				$cache_expiry = $Config->cache['expiry'];
+			} else {
+				$cache = false;
+				$cache_expiry = 0;
+			}
+		}
 
 		try {
 			if ($cache) {
-				$cache_file = CACHE_DIR.'/'.sha1($url);
-				$cache_expiry = 60 * 60 * 60;
+				$cache_file = $Config->cache['directory'].'/'.sha1($url);
 				$buffering = false;
 			}
 
