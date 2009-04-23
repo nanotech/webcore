@@ -50,10 +50,14 @@ class Mailer {
 		}
 	}
 
+	public function checkEmail($email) {
+		return self::validate_email($email);
+	}
+
 	/*
 	 * from http://www.linuxjournal.com/article/9585
 	 */
-	function checkEmail($email)
+	public static function validate_email($email)
 	{
 		$isValid = true;
 		$atIndex = strrpos($email, '@');
