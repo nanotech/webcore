@@ -94,6 +94,8 @@ class Access {
 	var $dbConn;
 	var $userData=array();
 
+	public $cookie;
+
 	/**
 	 * Class Constructor
 	 * 
@@ -260,6 +262,7 @@ class Access {
 
 		$cookie = $cookie['token'].$cookie['series'].$cookie['userid'];
 		$_SESSION['authcookie'] = $cookie;
+		$this->cookie = $cookie;
 
 		setcookie($this->remCookieName, $cookie,
 			time()+$this->remTime, '/', $this->remCookieDomain, false, true);
