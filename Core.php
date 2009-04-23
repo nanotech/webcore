@@ -24,7 +24,7 @@ class Core
 	{
 		global $Config;
 
-		if (isset($Config)) {
+		if (isset($Config) && $Config->cache['resources']) {
 			$resource_cache = $Config->cache['directory'].'/resource_cache.php';
 
 			if (file_exists($resource_cache)) {
