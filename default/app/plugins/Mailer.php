@@ -57,7 +57,7 @@ class Mailer {
 	/*
 	 * from http://www.linuxjournal.com/article/9585
 	 */
-	public static function validate_email($email)
+	public static function validate_email($email, $context=null)
 	{
 		$isValid = true;
 		$atIndex = strrpos($email, '@');
