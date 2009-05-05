@@ -17,42 +17,82 @@ class Display
 	/**
 	 * Apply the Display's filters to a file.
 	 */
-	public function render($file)
+	public function render($resource_name, $group='views')
 	{
+		global $config;
+
 		# Find the actual file.
-		$file = Core::find_resource($file, 'views');
+		$resource = Core::find_resource($resource_name, $group);
 
 		# Load the inital data.
-		$data = file_get_contents($file);
-		$meta = $this->meta;
+		list($data, $meta) = $resource->parse($this->meta);
+
+		# Apply filters, if any.
 
 		foreach($this->filters as $filter) {
-			list($data, $meta) = $this->apply_filter($filter, $data, $meta);
+			list($data, $meta) = self::apply_filter($filter, $data, $meta);
 		}
 
 		return $data;
 	}
 
-	public static function apply_filter($filter_name, $data, $meta)
+	public static function read_filter_entry($filter)
 	{
-		# Array entries are Filters with arguments.
-		if (is_array($filter_name)) {
-			$filter_args = $filter_name;
-			$filter_name = array_shift($filter_args);
+		if (is_array($filter)) {
+			$args = $filter;
+			$name = array_shift($args);
 		} else {
-			$filter_args = array();
+			$name = $filter;
+			$args = array();
 		}
 
-		# Initialize filter.
-		$filter = new $filter_name($meta);
+		return array($name, $args);
+	}
+
+	public static function apply_parser($parser, $file, $meta=array())
+	{
+		if (class_exists($parser))
+		{
+			$parse_file = method_exists($parser, 'parse_file');
+			$data = ($parse_file === true) ? $file : file_get_contents($file);
+			list($data, $meta) = self::apply_filter($parser, $data, $meta, $parse_file);
+		}
+		else if (function_exists($parser))
+		{
+			$data = $parser(file_get_contents($file));
+		}
+		else
+		{
+			exit('Resource '.$resource->file.' does not have a parser!');
+		}
+
+		return array($data, $meta);
+	}
+
+	public static function apply_filter($filter, $data, $meta, $parse_file=false)
+	{
+		# Array entries are Filters with arguments.
+		list($filter_name, $filter_args) = self::read_filter_entry($filter);
 
 		# Add the data to the filter arguments.
 		array_unshift($filter_args, $data);
 
-		# Run the filter.
-		$parsed_data = call_user_func_array(array($filter, 'parse'), $filter_args);
+		if (class_exists($filter_name))
+		{
+			# Initialize filter.
+			$filter = new $filter_name($meta);
 
-		return array($parsed_data, $filter->meta);
+			# Run the filter.
+			$method = ($parse_file) ? 'parse_file' : 'parse';
+			$parsed_data = call_user_func_array(array($filter, $method), $filter_args);
+			$meta = $filter->meta;
+		}
+		else if (function_exists($filter_name))
+		{
+			$parsed_data = $filter_name($data);
+		}
+
+		return array($parsed_data, $meta);
 	}
 }
 ?>

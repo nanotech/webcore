@@ -12,9 +12,9 @@ class Controller
 		$this->url = $url;
 	}
 
-	protected function render($view)
+	protected function render($view, $group='views')
 	{
-		echo $this->display->render($view);
+		echo $this->display->render($view, $group);
 	}
 
 	public function redirect_to($action, $values=array())

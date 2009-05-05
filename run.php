@@ -7,17 +7,28 @@ set_include_path(get_include_path().'.:'.APP_DIR.':'.WEBCORE_DIR.'/default:');
 require WEBCORE_DIR.'/Core.php';
 require WEBCORE_DIR.'/Config.php';
 
-if (file_exists(APP_DIR.'/config/config.php')) {
-	$Config = new Config(require 'config/config.php');
+$config_file = APP_DIR.'/config/config.php';
 
-	define('DEBUG', $Config->debug);
-	define('BASE_URL', $Config->base_url);
+if (file_exists($config_file)) {
+	$config = require $config_file;
+
+	if (!is_array($config)) {
+		exit('/config/config.php is an invalid configuration file.');
+	}
+
+	define('DEBUG', $config['debug']);
+
+	if (!isset($config['base_url'])) {
+		$config['base_url'] = dirname($_SERVER['SCRIPT_NAME']);
+	}
+
+	define('BASE_URL', $config['base_url']);
 } else {
 	require 'config/constants.php';
 }
 
 Core::index_resources(array(
-	'php' => array(
+	'code' => array(
 		WEBCORE_DIR.'/default/app/controllers',
 		WEBCORE_DIR.'/default/app/plugins',
 		APP_DIR.'/controllers',

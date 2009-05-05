@@ -24,7 +24,7 @@ class DefaultController extends Controller {
 		# you by the various WebCore classes, but since I wanted to get the
 		# filename of the index view, Core::find_resource is run here.
 		#
-		$file = Core::find_resource('index', 'views');
+		$file = Core::find_resource('index', 'views')->file;
 
 		# Some tweaks to the file's path to keep it short
 		# and unambiguous for the page.

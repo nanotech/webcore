@@ -11,11 +11,8 @@
 
 $Display = new Display(array(
 
-	# With simple filters, you just specify a name.
-	'PlainPHP',
-
-	# With more complex filters, you can specify options for a filter by using
-	# an array. The first element of the array is the name of the filter, and
+	# Some filters allow you to specify options for a filter by using an
+	# array. The first element of the array is the name of the filter, and
 	# the rest are passed as arguments to the filter's parse method.
 	#
 	# In the Layout filter, the first argument (the second element) is the
@@ -23,5 +20,8 @@ $Display = new Display(array(
 	# array of filters, as Layout creates it's own Display to render the
 	# layout view with.
 	array('Layout', 'main', array('PlainPHP')),
+
+	# Simpler filters just require you to specify the filter's name.
+	'RewriteAbsoluteLinks',
 ));
 ?>

@@ -89,22 +89,17 @@ class Director
 
 	protected function execute($url, $action, $parameters=NULL, $cache=NULL)
 	{
-		global $Config;
+		global $config;
 		list($class, $method) = explode('.', $action);
 
 		if ($cache === NULL) {
-			if (isset($Config)) {
-				$cache = ($Config->cache['level'] == 'url');
-				$cache_expiry = $Config->cache['expiry'];
-			} else {
-				$cache = false;
-				$cache_expiry = 0;
-			}
+			$cache = ($config['cache']['level'] == 'url');
+			$cache_expiry = $config['cache']['expiry'];
 		}
 
 		try {
 			if ($cache) {
-				$cache_file = $Config->cache['directory'].'/'.sha1($url);
+				$cache_file = $config['cache']['directory'].'/'.sha1($url);
 				$buffering = false;
 			}
 
