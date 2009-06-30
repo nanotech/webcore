@@ -21,8 +21,17 @@ class Display
 	{
 		global $config;
 
+		$dotpos = strrpos($resource_name, '.');
+
+		if ($dotpos !== false) {
+			$type = substr($resource_name, $dotpos + 1);
+			$resource_name = substr($resource_name, 0, $dotpos);
+		} else {
+			$type = false;
+		}
+
 		# Find the actual file.
-		$resource = Core::find_resource($resource_name, $group);
+		$resource = Core::find_resource($resource_name, $group, $type);
 
 		# Load the inital data.
 		list($data, $meta) = $resource->parse($this->meta);
