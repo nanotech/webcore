@@ -58,21 +58,29 @@ class Display
 		return array($name, $args);
 	}
 
-	public static function apply_parser($parser, $file, $meta=array())
+	public static function apply_parser($parsers, $file, $meta=array())
 	{
-		if (class_exists($parser))
-		{
-			$parse_file = method_exists($parser, 'parse_file');
-			$data = ($parse_file === true) ? $file : file_get_contents($file);
-			list($data, $meta) = self::apply_filter($parser, $data, $meta, $parse_file);
-		}
-		else if (function_exists($parser))
-		{
-			$data = $parser(file_get_contents($file));
-		}
-		else
-		{
-			exit('Resource '.$resource->file.' does not have a parser!');
+		$data = false;
+
+		foreach ((array) $parsers as $parser) {
+			if (class_exists($parser))
+			{
+				if ($data) {
+					$parse_file = false;
+				} else {
+					$parse_file = method_exists($parser, 'parse_file');
+					$data = ($parse_file === true) ? $file : file_get_contents($file);
+				}
+				list($data, $meta) = self::apply_filter($parser, $data, $meta, $parse_file);
+			}
+			else if (function_exists($parser))
+			{
+				$data = $parser(file_get_contents($file));
+			}
+			else
+			{
+				exit('Resource '.$file.' does not have a parser!'); // TODO FIXME very ugly.
+			}
 		}
 
 		return array($data, $meta);
