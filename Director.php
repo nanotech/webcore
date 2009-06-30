@@ -8,6 +8,9 @@ class Director
 	public $parsed_patterns; # in-memory cache
 	public $error_handlers; # actions to use in case of errors
 
+	const LEFT_DELIMITER = '{{{';
+	const RIGHT_DELIMITER = '}}}';
+
 	public function Director($config=false)
 	{
 		$this->patterns = array();
@@ -39,7 +42,7 @@ class Director
 
 		try {
 			// Loop through the patterns.
-			// The array key is the pattern, and the 
+			// The array key is the pattern, and the
 			// value is the action.
 			foreach ($this->patterns as $pattern => $action)
 			{
@@ -49,9 +52,17 @@ class Director
 
 				if (preg_match($regex, $url, $parameters))
 				{
-					$action = self::parse_action($action, $parameters);
+					$maybe_action = self::parse_action($action, $parameters);
 
-					if ($controller = $this->execute($url, $action, $parameters)) {
+					if ($maybe_action !== false) {
+						$class = $maybe_action[0];
+						$method = $maybe_action[1];
+					} else {
+						$url = $action;
+						return $this->parse($url);
+					}
+
+					if ($controller = $this->execute($url, $class, $method, $parameters)) {
 						return true;
 					} else {
 						throw new HttpError(404);
@@ -79,7 +90,9 @@ class Director
 				$handler = $handlers['default'];
 			}
 
-			if (!$this->execute($url, $handler, array('code' => $error_code), false)) {
+			list($class, $method) = self::parse_action($handler, $parameters);
+
+			if (!$this->execute($url, $class, $method, array('code' => $error_code), false)) {
 				die('Missing error handler "'.$handler.'"!');
 			}
 
@@ -87,10 +100,9 @@ class Director
 		}
 	}
 
-	protected function execute($url, $action, $parameters=NULL, $cache=NULL)
+	protected function execute($url, $class, $method, $parameters=NULL, $cache=NULL)
 	{
 		global $config;
-		list($class, $method) = explode('.', $action);
 
 		if ($cache === NULL) {
 			$cache = ($config['cache']['level'] == 'url');
@@ -144,16 +156,15 @@ class Director
 	 */
 	public static function get_uri()
 	{
-		$maybe_uris = @array(
-			$_SERVER['PATH_INFO'],
-			$_SERVER['QUERY_STRING'],
-			$_SERVER['ORIG_PATH_INFO']
+		$maybe_uris = array(
+			&$_SERVER['PATH_INFO'],
+			&$_SERVER['ORIG_PATH_INFO'],
+			&$_SERVER['QUERY_STRING']
 		);
 
-		foreach($maybe_uris as $uri) {
-			$uri = trim($uri, '/');
-
-			if (!empty($uri)) {
+		foreach($maybe_uris as &$uri) {
+			if (isset($uri)) {
+				$uri = trim($uri, '/');
 				return $uri;
 			}
 		}
@@ -170,26 +181,55 @@ class Director
 	/**
 	 * Parse a custom-syntax pattern into a regex and an array.
 	 */
-	public static function parse_pattern($pattern)
+	public static function parse_pattern($pattern, $_toplevel=true)
 	{
-		# Find regex patterns
-		preg_match_all('/\((.*?)(?:\:([^)]+))?\)/u', $pattern, $matches);
+		$regex = '';
+		$sections = $pattern;
 
-		# Convert patterns to valid regex and set named captures
-		$c = count($matches[0]);
-		$regex = $sections = $pattern; # copy $pattern for manipulation
+		if ($pattern !== '') {
+			$len = strlen($pattern);
 
-		for ($i=0;$i<$c;++$i) {
-			$name = $matches[2][$i];
-			$old_pattern = $matches[0][$i];
+			for ($i=0; $i<$len; ++$i) {
+				$chr = $pattern{$i};
+				if ($chr === '(') {
+					$next_bracket = strrpos($pattern, ')', $i);
+					$sub_pattern = substr($pattern, $i+1, $next_bracket-$i-1);
 
-			$subpattern = '(?P<'.$name.'>'.$matches[1][$i].')';
-			$regex = str_replace($old_pattern, $subpattern, $regex);
-			$sections = str_replace($old_pattern, '('.$name.')', $sections);
+					$name_pos = strrpos($sub_pattern, ':');
+
+					if ($name_pos !== 0) {
+						$name = substr($sub_pattern, $name_pos + 1);
+						$sections = str_replace(
+							'('.$sub_pattern.')',
+							self::LEFT_DELIMITER.$name.self::RIGHT_DELIMITER,
+							$sections
+						);
+
+						$sub_pattern = substr($sub_pattern, 0, $name_pos);
+					} else {
+						$name = null;
+					}
+
+					$parsed_sub = self::parse_pattern($sub_pattern, false);
+					$parsed_sub = $parsed_sub[0];
+
+					if ($name !== null) {
+						$regex .= '(?P<'.$name.'>'.$parsed_sub.')';
+					} else {
+						$regex .= '(?'.$parsed_sub.')';
+					}
+
+					$i = $next_bracket;
+				} else {
+					$regex .= $chr;
+				}
+			}
 		}
 
-		# Add dilemters, flags.
-		$regex = '!^'.$regex.'$!ui';
+		if ($_toplevel) {
+			# Add dilemters, flags.
+			$regex = '!^'.$regex.'$!ui';
+		}
 
 		return array($regex, $sections);
 	}
@@ -199,13 +239,19 @@ class Director
 	 */
 	public static function parse_action($action, $values)
 	{
+		$parts = explode('.', $action); // TODO: OPTIMIZE
+
+		if (count($parts) !== 2) {
+			return false;
+		}
+
 		# Parse the variables in the action
 		$action = self::replace_variables($action, $values);
 
 		# Ensure the first letter of the controller is uppercase
 		$action = ucfirst($action);
 
-		return $action;
+		return explode('.', $action); // TODO: OPTIMIZE
 	}
 
 	/**
@@ -214,7 +260,9 @@ class Director
 	public static function replace_variables($string, $values)
 	{
 		# Find any variables
-		preg_match_all('/\(([^)]+)\)/u', $string, $matches);
+		$l = preg_quote(self::LEFT_DELIMITER);
+		$r = preg_quote(self::RIGHT_DELIMITER);
+		preg_match_all('/'.$l.'([^)]+)'.$r.'/u', $string, $matches);
 
 		# Replace variables with their values
 		foreach ($matches[1] as $id => $var) {
