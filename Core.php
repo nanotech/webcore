@@ -57,10 +57,10 @@ class Core
 		$cache_resources = $config['cache']['resources'];
 
 		if ($cache_resources) {
-			$resource_cache = $config['cache']['directory'].'/resource_cache.php';
+			$resource_cache = $config['cache']['directory'].'/resource_cache.php_serial';
 
 			if (file_exists($resource_cache)) {
-				self::$resources = require $resource_cache;
+				self::$resources = unserialize(file_get_contents($resource_cache));
 				return;
 			}
 		}
@@ -79,7 +79,7 @@ class Core
 		}
 
 		if ($cache_resources) {
-			$exported = '<?php return '.var_export(self::$resources, true).';?>';
+			$exported = serialize(self::$resources);
 			file_put_contents($resource_cache, $exported);
 		}
 	}
