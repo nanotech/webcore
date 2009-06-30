@@ -2,7 +2,6 @@
 class Core
 {
 	const CODE_GROUP      = 'code';
-	const DEFAULT_OUTPUT  = 0;
 
 	static public $resources = array();
 
@@ -29,12 +28,7 @@ class Core
 
 		if (isset($resource)) {
 			if ($type === false) {
-				if (isset($resource[self::DEFAULT_OUTPUT])) {
-					$typed_resource = $resource[self::DEFAULT_OUTPUT];
-				} else {
-					$typed_resource = reset($resource);
-				}
-
+				$typed_resource = reset($resource);
 			} else {
 				$typed_resource = $resource[$type];
 			}
@@ -107,7 +101,7 @@ class Core
 			# Name parts.
 			$id = end($parts);
 			$format = $parts[0];
-			$output = ($part_count >= 3) ? $parts[1] : self::DEFAULT_OUTPUT;
+			$output = ($part_count >= 3) ? $parts[1] : $parts[0];
 
 			# Don't index dotfiles
 			if (empty($id) || $id{0} == '.') {
