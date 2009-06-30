@@ -39,7 +39,7 @@ if (!file_exists(BASE_DIR)) {
 	copy_defaults('static');
 	copy_default_and_modify('htaccess', 'RewriteBase /', 'RewriteBase '.BASE_URI, '.htaccess');
 	copy_default_and_modify('index.php', 'webcore/run.php', WEBCORE_DIR.'/run.php');
-	copy_default_and_modify('app/config/constants.php', "'base_url' => ''", "'base_url' => '".BASE_URI."'");
+	copy_default_and_modify('app/config/config.php', "'base_url' => ''", "'base_url' => '".BASE_URI."'");
 
 	say('App created.');
 
