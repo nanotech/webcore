@@ -10,8 +10,10 @@ abstract class Filter {
 		$this->meta = $meta;
 	}
 
+	/* // Implement this in a subclass.
 	public function parse($data) {
 		return $data;
 	}
+	*/
 }
 ?>
