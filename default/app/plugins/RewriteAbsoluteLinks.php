@@ -8,6 +8,12 @@ class RewriteAbsoluteLinks extends Filter {
 	{
 		global $config;
 
+		$base_url = rtrim($config['base_url'], '/');
+
+		if ($base_url === '') {
+			return $data;
+		}
+
 		preg_match_all('@(href|src|action)=("|\')(/(?:.*?))\\2@i', $data, $m);
 
 		//
@@ -18,12 +24,6 @@ class RewriteAbsoluteLinks extends Filter {
 		// 2: Quotes.        Example: "
 		// 3: URIs           Example: foo/bar.htm
 		//
-
-		$base_url = rtrim($config['base_url'], '/');
-
-		if ($base_url === '') {
-			$base_url = '/';
-		}
 
 		$hrefs  = $m[0];
 		$attrs  = $m[1];
